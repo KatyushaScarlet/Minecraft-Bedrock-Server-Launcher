@@ -1,7 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <config>
-  <password>default_password</password>
-  <port>6666</port>
+  <port>666</port>
   <windows>bedrock_server.exe</windows>
   <linux>LD_LIBRARY_PATH=. ./bedrock_server</linux>
 </config>

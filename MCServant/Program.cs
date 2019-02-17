@@ -10,7 +10,6 @@ namespace MCServant
         private static Process p = new Process();
         private static string shell = "";
         private static string startCommand = "";
-        private static string password = "";
 
         private static string output = "";
     
@@ -19,7 +18,6 @@ namespace MCServant
             //读取配置文件
             XMLConfig config = new XMLConfig("config.xml");
             int port = config.port;
-            string password = config.password;
             string windows = config.windows;
             string linux = config.linux;
 
@@ -40,7 +38,7 @@ namespace MCServant
             string url = string.Format("http://127.0.0.1:{0}/", port);
             WebServer webServer = new WebServer(SendResponse, url);
             webServer.Run();
-            Console.WriteLine(string.Format("[Web API]Running at port[{0}], password[{1}]", port, password));
+            Console.WriteLine(string.Format("[Web API]Running at port[{0}]", port));
 
             //捕获Ctrl+C事件
             Console.CancelKeyPress += new ConsoleCancelEventHandler(ConsoleExit);
@@ -104,9 +102,11 @@ namespace MCServant
             string command = WebUtility.UrlDecode(request.RawUrl).Substring(1);
             switch (command)
             {
+                //忽略浏览器请求
                 case "":
                 case null:
                 case "favicon.ico":
+                case "robots.txt":
                     Console.WriteLine(string.Format("[Web API]Get command:{0},ignore", command));
                     break;
                 default:
