@@ -67,12 +67,7 @@ namespace MCServant
                 string input = Console.ReadLine();
                 if (input != "")
                 {
-                    p.StandardInput.WriteLine(input);
-
-                    if (input == "stop")
-                    {
-                        ConsoleExit(null, null);
-                    }
+                    SendCommand(input);
                 }
             }
         }
@@ -111,11 +106,22 @@ namespace MCServant
                     break;
                 default:
                     Console.WriteLine(string.Format("[Web API]Get command:{0}", command));
-                    p.StandardInput.WriteLine(command);
+                    SendCommand(command);
                     System.Threading.Thread.Sleep(500);
                     break;
             }
             return output;
+        }
+
+        //发送命令
+        private static void SendCommand(string command)
+        {
+            p.StandardInput.WriteLine(command);
+
+            if (command == "stop")
+            {
+                ConsoleExit(null, null);
+            }
         }
     }
 }
