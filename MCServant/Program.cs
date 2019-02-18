@@ -10,6 +10,8 @@ namespace MCServant
         private static Process p = new Process();
         private static string shell = "";
         private static string startCommand = "";
+        private static string password = "";
+        private static bool remote = false;
 
         private static string output = "";
     
@@ -18,6 +20,8 @@ namespace MCServant
             //读取配置文件
             XMLConfig config = new XMLConfig("config.xml");
             int port = config.port;
+            password = config.password;
+            remote = config.remote;
             string windows = config.windows;
             string linux = config.linux;
 
@@ -35,10 +39,18 @@ namespace MCServant
             }
 
             //启动Web API
-            string url = string.Format("http://127.0.0.1:{0}/", port);
+            string url = "";
+            if (remote)
+            {
+                url = string.Format("http://+:{0}/", port);
+            }
+            else
+            {
+                url = string.Format("http://127.0.0.1:{0}/", port);
+            }
             WebServer webServer = new WebServer(SendResponse, url);
             webServer.Run();
-            Console.WriteLine(string.Format("[Web API]Running at port[{0}]", port));
+            Console.WriteLine(string.Format("[Web API]Running at [{0}], remote manage:[{1}]", url, remote));
 
             //捕获Ctrl+C事件
             Console.CancelKeyPress += new ConsoleCancelEventHandler(ConsoleExit);
@@ -94,22 +106,37 @@ namespace MCServant
         private static string SendResponse(HttpListenerRequest request)
         {
             output = "";
+            string ip = request.RemoteEndPoint.Address.ToString();
             string command = WebUtility.UrlDecode(request.RawUrl).Substring(1);
-            switch (command)
+
+            if (remote && password != "")
             {
-                //忽略浏览器请求
-                case "":
-                case null:
-                case "favicon.ico":
-                case "robots.txt":
-                    Console.WriteLine(string.Format("[Web API]Get command:{0},ignore", command));
-                    break;
-                default:
-                    Console.WriteLine(string.Format("[Web API]Get command:{0}", command));
-                    SendCommand(command);
-                    System.Threading.Thread.Sleep(500);
-                    break;
+                //开启远程管理，且密码不为空时
+                if (command.Contains('|'))
+                {
+                    //命令中附带密码时
+                    string[] commands = command.Split('|');
+                    if (commands[1] == password)
+                    {
+                        command = commands[0];
+                    }
+                    else
+                    {
+                        Console.WriteLine(string.Format("[Web API]Wrong password, command:[{0}], from:[{1}], ignore", command, ip));
+                        return "error";
+                    }
+                }
+                else
+                {
+                    Console.WriteLine(string.Format("[Web API]Empty password, command:[{0}], from:[{1}], ignore", command, ip));
+                    return "error";
+                }
             }
+
+            //执行命令
+            Console.WriteLine(string.Format("[Web API]Get command:{0}, from[{1}]", command,ip));
+            SendCommand(command);
+            System.Threading.Thread.Sleep(500);
             return output;
         }
 
